@@ -5,3 +5,8 @@ authors = ["Carlo <CRefice@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+rand = "*"
+image = "*"
+rayon = "*"
+nalgebra-glm = "*"
+itertools = "*"
