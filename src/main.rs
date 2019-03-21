@@ -13,7 +13,6 @@ use std::path::Path;
 
 use config::UserConfig;
 use geom::*;
-use material::*;
 use ray::Ray;
 
 fn trace(r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
@@ -43,99 +42,6 @@ fn trace(r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
         let azure = glm::vec3(0.5, 0.7, 1.0);
         (1.0 - t) * white + t * azure
     }
-}
-
-fn setup_scene() -> Scene {
-    let mut scene = Scene::new();
-
-    let white = glm::vec3(1.0, 1.0, 1.0);
-    let red = glm::vec3(1.0, 0.0, 0.0);
-    let green = glm::vec3(0.0, 0.1, 0.0);
-    let blue = glm::vec3(0.0, 0.0, 1.0);
-    let pink = glm::vec3(0.8, 0.2, 0.2);
-
-    scene.add(Object::new(
-        Sphere::new(glm::vec3(1005.0, 2.0, 0.0), 1000.0),
-        Material {
-            color: red,
-            metalness: 0.0,
-            roughness: 1.0,
-            emission: glm::zero(),
-        },
-    ));
-    scene.add(Object::new(
-        Sphere::new(glm::vec3(-1005.0, 2.0, 0.0), 1000.0),
-        Material {
-            color: blue,
-            metalness: 0.0,
-            roughness: 1.0,
-            emission: glm::zero(),
-        },
-    ));
-    scene.add(Object::new(
-        Sphere::new(glm::vec3(0.0, 4.0, 0.0), 1.5),
-        Material {
-            color: white,
-            metalness: 0.0,
-            roughness: 1.0,
-            emission: white * 5.0,
-        },
-    ));
-    scene.add(Object::new(
-        Sphere::new(glm::vec3(0.0, 1005.0, 0.0), 1000.0),
-        Material {
-            color: white,
-            metalness: 0.0,
-            roughness: 1.0,
-            emission: glm::zero(),
-        },
-    ));
-    scene.add(Object::new(
-        Sphere::new(glm::vec3(0.0, -1003.0, 0.0), 1000.0),
-        Material {
-            color: white,
-            metalness: 0.0,
-            roughness: 1.0,
-            emission: glm::zero(),
-        },
-    ));
-    scene.add(Object::new(
-        Sphere::new(glm::vec3(0.0, 0.0, 1005.0), 1000.0),
-        Material {
-            color: white,
-            metalness: 0.0,
-            roughness: 1.0,
-            emission: glm::zero(),
-        },
-    ));
-    scene.add(Object::new(
-        Sphere::new(glm::vec3(0.0, 0.0, -1006.0), 1000.0),
-        Material {
-            color: green,
-            metalness: 0.0,
-            roughness: 1.0,
-            emission: glm::zero(),
-        },
-    ));
-    scene.add(Object::new(
-        Sphere::new(glm::vec3(-2.0, -2.0, 0.0), 1.0),
-        Material {
-            color: pink,
-            metalness: 1.0,
-            roughness: 0.6,
-            emission: glm::zero(),
-        },
-    ));
-    scene.add(Object::new(
-        Sphere::new(glm::vec3(2.0, -2.0, 0.0), 1.0),
-        Material {
-            color: pink,
-            metalness: 0.0,
-            roughness: 1.0,
-            emission: glm::zero(),
-        },
-    ));
-    scene
 }
 
 fn quit_with_usage() -> ! {

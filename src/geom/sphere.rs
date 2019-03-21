@@ -12,12 +12,6 @@ pub struct Sphere {
     pub radius: f32,
 }
 
-impl Sphere {
-    pub fn new(center: Vec3, radius: f32) -> Self {
-        Sphere { center, radius }
-    }
-}
-
 impl Geometry for Sphere {
     fn intersection(&self, r: &Ray, min: f32, max: f32) -> Option<RayHit> {
         let oc = r.origin - self.center;

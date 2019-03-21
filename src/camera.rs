@@ -13,16 +13,6 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn at_origin(fov: f32, aspect: f32) -> Self {
-        Camera::looking_at(
-            Vec3::new(0.0, 0.0, 0.0),
-            Vec3::new(0.0, 0.0, -1.0),
-            Vec3::new(0.0, 1.0, 0.0),
-            fov,
-            aspect,
-        )
-    }
-
     pub fn looking_at(position: Vec3, at: Vec3, up: Vec3, fov: f32, aspect: f32) -> Self {
         let theta = fov * PI / 180.0;
         let half_h = f32::tan(theta / 2.0);

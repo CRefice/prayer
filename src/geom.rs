@@ -35,12 +35,6 @@ pub struct TraceResult<'a> {
     pub material: &'a Material,
 }
 
-impl Object {
-    pub fn new(geometry: Sphere, material: Material) -> Self {
-        Object { geometry, material }
-    }
-}
-
 impl Traceable for Object {
     fn trace(&self, ray: &Ray, min: f32, max: f32) -> Option<TraceResult> {
         self.geometry

@@ -62,17 +62,6 @@ impl Material {
         (Ray::new(hit.point, direction), p)
     }
 
-    pub fn reflectance(&self, w0: &Vec3, wi: &Vec3, n: &Vec3) -> (Vec3, Vec3) {
-        let h = glm::normalize(&(w0 + wi));
-        let f0 = glm::vec3(0.04, 0.04, 0.04);
-        let f0 = glm::mix(&f0, &self.color, self.metalness);
-        let f = fresnel(&wi, &h, &f0);
-        let g = geometry(&n, &h, w0, wi);
-        let num = f * g * glm::dot(&w0, &h);
-        let denom = glm::dot(&n, &w0) * glm::dot(&n, &h);
-        (num / denom, f)
-    }
-
     /// Return type is (brdf, fresnel)
     pub fn brdf(&self, w0: &Vec3, wi: &Vec3, n: &Vec3) -> (Vec3, Vec3) {
         let h = glm::normalize(&(w0 + wi));
