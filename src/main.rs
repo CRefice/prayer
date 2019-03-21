@@ -13,33 +13,26 @@ pub type Vec3 = glm::TVec3<f32>;
 use geom::*;
 use material::*;
 
-fn clamp<T: PartialOrd>(x: T, min: T, max: T) -> T {
-    if x < min {
-        min
-    } else if x > max {
-        max
-    } else {
-        x
-    }
-}
-
 fn trace(r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
     if depth == 0 {
         return glm::zero();
     }
     if let Some(result) = scene.trace(r, 0.001, std::f32::MAX) {
         let material = result.material;
-        let reflectance = {
-            let n = result.hit.normal;
-            let (bounce, pdf) = material.bounce(&r, &result.hit);
+        let w0 = -r.direction;
+        let n = result.hit.normal;
+        let (bounce, pdf) = material.bounce(&w0, &result.hit);
+        let incident = trace(&bounce, scene, depth - 1);
+        let (brdf, ks) = material.brdf(&w0, &bounce.direction, &n);
+        let specular = brdf / pdf;
+        let diffuse = {
             let lambert = material.color / std::f32::consts::PI;
-            let costheta = f32::max(glm::dot(&n, &bounce.direction), 0.0);
-            let incident = trace(&bounce, scene, depth - 1);
-            let (brdf, ks) = material.brdf(&(-r.direction), &bounce.direction, &n);
-            let kd = glm::vec3(1.0, 1.0, 1.0) - ks * (1.0 - material.metalness);
-            (kd.component_mul(&lambert) + brdf).component_mul(&incident) * costheta / pdf
+            let kd = (glm::vec3(1.0, 1.0, 1.0) - ks) * (1.0 - material.metalness);
+            let pdf = 1.0 / (2.0 * std::f32::consts::PI);
+            kd.component_mul(&lambert) / pdf
         };
-        reflectance + material.emission
+        let costheta = f32::max(glm::dot(&n, &bounce.direction), 0.0);
+        (diffuse + specular).component_mul(&incident) * costheta + material.emission
     } else {
         let dir = glm::normalize(&r.direction);
         let t = 0.5 * (dir.y + 1.0);
@@ -82,7 +75,7 @@ fn setup_scene<'a>() -> Scene<'a> {
             color: white,
             metalness: 0.0,
             roughness: 1.0,
-            emission: white * 10.0,
+            emission: white * 5.0,
         },
     ));
     scene.add(Object::new(
@@ -126,7 +119,7 @@ fn setup_scene<'a>() -> Scene<'a> {
         Material {
             color: pink,
             metalness: 1.0,
-            roughness: 0.2,
+            roughness: 0.6,
             emission: glm::zero(),
         },
     ));
@@ -145,7 +138,7 @@ fn setup_scene<'a>() -> Scene<'a> {
 fn main() {
     let w = 800;
     let h = 800;
-    let ss = 200;
+    let ss = 40;
     let gamma = 2.2;
 
     let camera = camera::Camera::looking_at(
@@ -171,14 +164,14 @@ fn main() {
                     let rand: f32 = rng.gen();
                     let v = (y as f32 + rand) / h as f32;
                     let ray = camera.ray_at(u, v);
-                    trace(&ray, &scene, 3)
+                    trace(&ray, &scene, 5)
                 })
                 .sum::<Vec3>()
                 / ss as f32;
             vec![
-                (clamp(color.x.powf(1.0 / gamma), 0.0, 1.0) * 255.99) as u8,
-                (clamp(color.y.powf(1.0 / gamma), 0.0, 1.0) * 255.99) as u8,
-                (clamp(color.z.powf(1.0 / gamma), 0.0, 1.0) * 255.99) as u8,
+                (color.x.max(0.0).min(1.0).powf(1.0 / gamma) * 255.99) as u8,
+                (color.y.max(0.0).min(1.0).powf(1.0 / gamma) * 255.99) as u8,
+                (color.z.max(0.0).min(1.0).powf(1.0 / gamma) * 255.99) as u8,
             ]
         })
         .collect::<Vec<_>>();

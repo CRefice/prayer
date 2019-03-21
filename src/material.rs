@@ -32,10 +32,6 @@ pub struct Material {
     pub emission: Vec3,
 }
 
-fn reflect(a: &Vec3, b: &Vec3) -> Vec3 {
-    a - 2.0 * glm::dot(a, b) * b
-}
-
 impl Material {
     fn importance_theta(&self) -> f32 {
         let mut rng = rand::thread_rng();
@@ -45,12 +41,8 @@ impl Material {
         f32::atan(a * sqrt)
     }
 
-    pub fn bounce(&self, ray: &Ray, hit: &RayHit) -> (Ray, f32) {
+    pub fn bounce(&self, w0: &Vec3, hit: &RayHit) -> (Ray, f32) {
         let n = hit.normal;
-        if self.roughness == 0.0 {
-            let direction = reflect(&ray.direction, &n);
-            return (Ray::new(hit.point, direction), 1.0);
-        }
         let mut rng = rand::thread_rng();
         let theta = self.importance_theta();
         let phi: f32 = rng.gen::<f32>() * 2.0 * std::f32::consts::PI;
@@ -60,7 +52,23 @@ impl Material {
         let z = f32::sin(theta) * f32::cos(phi);
 
         let direction = glm::normalize(&transform_to_world(&glm::vec3(x, y, z), &n));
-        (Ray::new(hit.point, direction), self.pdf(theta, phi))
+        let h = glm::normalize(&(w0 + direction));
+
+        let cost = f32::max(0.0, glm::dot(&n, &h));
+        let pdf = normal_distribution(&n, &h, self.roughness) * cost;
+        let p = pdf / (4.0 * f32::max(0.0, glm::dot(&w0, &h)));
+        (Ray::new(hit.point, direction), p)
+    }
+
+    pub fn reflectance(&self, w0: &Vec3, wi: &Vec3, n: &Vec3) -> (Vec3, Vec3) {
+        let h = glm::normalize(&(w0 + wi));
+        let f0 = glm::vec3(0.04, 0.04, 0.04);
+        let f0 = glm::mix(&f0, &self.color, self.metalness);
+        let f = fresnel(&wi, &h, &f0);
+        let g = geometry(&n, &h, w0, wi);
+        let num = f * g * glm::dot(&w0, &h);
+        let denom = glm::dot(&n, &w0) * glm::dot(&n, &h);
+        (num / denom, f)
     }
 
     /// Return type is (brdf, fresnel)
@@ -75,22 +83,13 @@ impl Material {
         let denom = 4.0 * glm::dot(&n, &wi) * glm::dot(&n, &w0);
         (num / denom, f)
     }
-
-    fn pdf(&self, theta: f32, _phi: f32) -> f32 {
-        let a = self.roughness * self.roughness;
-        let cost = f32::cos(theta);
-        let num = a * a * cost * f32::sin(theta);
-        let denom = cost * cost * (a * a - 1.0) + 1.0;
-        let denom = std::f32::consts::PI * denom * denom;
-        num / denom
-    }
 }
 
 fn normal_distribution(n: &Vec3, h: &Vec3, roughness: f32) -> f32 {
     let a = roughness * roughness;
     let ndoth = f32::max(glm::dot(n, h), 0.0);
     let num = a * a;
-    let denom = ndoth * ndoth * (a * a - 1.0) + 1.0;
+    let denom = (ndoth * ndoth) * (a * a - 1.0) + 1.0;
     let denom = std::f32::consts::PI * denom * denom;
     num / denom
 }
