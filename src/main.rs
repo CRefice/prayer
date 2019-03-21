@@ -1,17 +1,20 @@
 mod camera;
+mod config;
 mod geom;
 mod material;
 mod ray;
 
+pub use glm::Vec3;
+use nalgebra_glm as glm;
+
 use rand::prelude::*;
-use ray::Ray;
 use rayon::prelude::*;
+use std::path::Path;
 
-pub use nalgebra_glm as glm;
-pub type Vec3 = glm::TVec3<f32>;
-
+use config::UserConfig;
 use geom::*;
 use material::*;
+use ray::Ray;
 
 fn trace(r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
     if depth == 0 {
@@ -42,7 +45,7 @@ fn trace(r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
     }
 }
 
-fn setup_scene<'a>() -> Scene<'a> {
+fn setup_scene() -> Scene {
     let mut scene = Scene::new();
 
     let white = glm::vec3(1.0, 1.0, 1.0);
@@ -135,12 +138,23 @@ fn setup_scene<'a>() -> Scene<'a> {
     scene
 }
 
-fn main() {
-    let w = 800;
-    let h = 800;
-    let ss = 40;
-    let gamma = 2.2;
+fn quit_with_usage() -> ! {
+    eprintln!("Usage: prayer [OUTPUT] [CONFIG]");
+    std::process::exit(1)
+}
 
+fn main() {
+    let mut args = std::env::args();
+    let image = args.nth(1).unwrap_or_else(|| quit_with_usage());
+    let config = args.next().unwrap_or_else(|| quit_with_usage());
+    let UserConfig { params, scene } =
+        UserConfig::from_file(Path::new(&config)).unwrap_or_else(|e| {
+            eprintln!("{}", e);
+            std::process::exit(1)
+        });
+
+    let w = params.resolution.x;
+    let h = params.resolution.y;
     let camera = camera::Camera::looking_at(
         glm::vec3(0.0, 0.0, 5.0),
         glm::vec3(0.0, 0.0, 0.0),
@@ -148,14 +162,13 @@ fn main() {
         80.0,
         w as f32 / h as f32,
     );
-    let scene = setup_scene();
 
     let buffer = (0..w * h)
         .into_par_iter()
         .flat_map(|i| {
             let x = i % w;
             let y = i / w;
-            let color = (0..ss)
+            let color = (0..params.samples)
                 .into_par_iter()
                 .map(|_| {
                     let mut rng = rand::thread_rng();
@@ -164,16 +177,16 @@ fn main() {
                     let rand: f32 = rng.gen();
                     let v = (y as f32 + rand) / h as f32;
                     let ray = camera.ray_at(u, v);
-                    trace(&ray, &scene, 5)
+                    trace(&ray, &scene, params.max_light_bounces)
                 })
                 .sum::<Vec3>()
-                / ss as f32;
+                / params.samples as f32;
             vec![
-                (color.x.max(0.0).min(1.0).powf(1.0 / gamma) * 255.99) as u8,
-                (color.y.max(0.0).min(1.0).powf(1.0 / gamma) * 255.99) as u8,
-                (color.z.max(0.0).min(1.0).powf(1.0 / gamma) * 255.99) as u8,
+                (color.x.max(0.0).min(1.0).powf(1.0 / params.gamma) * 255.99) as u8,
+                (color.y.max(0.0).min(1.0).powf(1.0 / params.gamma) * 255.99) as u8,
+                (color.z.max(0.0).min(1.0).powf(1.0 / params.gamma) * 255.99) as u8,
             ]
         })
         .collect::<Vec<_>>();
-    image::save_buffer("image.png", &buffer, w, h, image::RGB(8)).unwrap()
+    image::save_buffer(&image, &buffer, w, h, image::RGB(8)).unwrap()
 }

@@ -5,8 +5,10 @@ authors = ["Carlo <CRefice@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rand = "*"
 image = "*"
-rayon = "*"
-nalgebra-glm = "*"
 itertools = "*"
+nalgebra-glm = { version = "*", features = ["serde-serialize"] }
+rand = "*"
+rayon = "*"
+serde = { version = "*", features = ["derive"] }
+toml = "*"

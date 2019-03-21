@@ -1,10 +1,12 @@
 use nalgebra_glm as glm;
+use serde::{Deserialize, Serialize};
 
 use super::*;
 
 use crate::ray::Ray;
 use crate::Vec3;
 
+#[derive(Serialize, Deserialize)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
@@ -28,21 +30,13 @@ impl Geometry for Sphere {
             if t > min && t < max {
                 let point = r.point_at(t);
                 let normal = (point - self.center) / self.radius;
-                return Some(RayHit {
-                    t,
-                    point,
-                    normal
-                });
+                return Some(RayHit { t, point, normal });
             }
             let t = (-b + f32::sqrt(b * b - a * c)) / a;
             if t > min && t < max {
                 let point = r.point_at(t);
                 let normal = (point - self.center) / self.radius;
-                Some(RayHit {
-                    t,
-                    point,
-                    normal
-                })
+                Some(RayHit { t, point, normal })
             } else {
                 None
             }

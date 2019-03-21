@@ -1,4 +1,5 @@
 use nalgebra_glm as glm;
+use serde::{Deserialize, Serialize};
 
 use rand::prelude::*;
 
@@ -25,6 +26,7 @@ fn transform_to_world(vec: &Vec3, norm: &Vec3) -> Vec3 {
     v * vec.x + w * vec.y + u * vec.z
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Material {
     pub color: Vec3,
     pub metalness: f32,

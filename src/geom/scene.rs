@@ -1,23 +1,24 @@
-use super::*;
+use serde::{Deserialize, Serialize};
 
+use super::*;
 use crate::ray::Ray;
 
-#[derive(Default)]
-pub struct Scene<'a> {
-    objects: Vec<Object<'a>>,
+#[derive(Default, Serialize, Deserialize)]
+pub struct Scene {
+    objects: Vec<Object>,
 }
 
-impl<'a> Scene<'a> {
+impl Scene {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn add(&mut self, obj: Object<'a>) {
+    pub fn add(&mut self, obj: Object) {
         self.objects.push(obj)
     }
 }
 
-impl<'a> Traceable for Scene<'a> {
+impl Traceable for Scene {
     fn trace(&self, ray: &Ray, min: f32, max: f32) -> Option<TraceResult> {
         let mut max = max;
         let mut result = None;
