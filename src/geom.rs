@@ -1,8 +1,10 @@
+mod plane;
 mod scene;
 mod sphere;
 
 use serde::{Deserialize, Serialize};
 
+pub use self::plane::*;
 pub use self::scene::*;
 pub use self::sphere::*;
 use crate::material::Material;
@@ -25,8 +27,24 @@ pub struct RayHit {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum GeomType {
+    Sphere(Sphere),
+    Plane(Plane),
+}
+
+impl Geometry for GeomType {
+    fn intersection(&self, ray: &Ray, min: f32, max: f32) -> Option<RayHit> {
+        match self {
+            GeomType::Sphere(s) => s.intersection(ray, min, max),
+            GeomType::Plane(p) => p.intersection(ray, min, max),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct Object {
-    pub geometry: Sphere,
+    pub geometry: GeomType,
     pub material: Material,
 }
 
