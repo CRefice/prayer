@@ -1,5 +1,6 @@
 mod camera;
 mod config;
+mod environment;
 mod geom;
 mod material;
 mod ray;
@@ -37,10 +38,7 @@ fn trace(r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
         (diffuse + specular).component_mul(&incident) * costheta + material.emission
     } else {
         let dir = glm::normalize(&r.direction);
-        let t = 0.5 * (dir.y + 1.0);
-        let white = glm::vec3(1.0, 1.0, 1.0);
-        let azure = glm::vec3(0.5, 0.7, 1.0);
-        (1.0 - t) * white + t * azure
+        scene.environment.sample_direction(&dir)
     }
 }
 
@@ -62,7 +60,7 @@ fn main() {
     let w = params.resolution.x;
     let h = params.resolution.y;
     let camera = camera::Camera::looking_at(
-        glm::vec3(0.0, 0.0, 5.0),
+        glm::vec3(-5.0, 0.0, 0.0),
         glm::vec3(0.0, 0.0, 0.0),
         glm::vec3(0.0, 1.0, 0.0),
         80.0,

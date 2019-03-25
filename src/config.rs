@@ -3,11 +3,11 @@ use std::fs;
 use std::path::Path;
 
 use nalgebra_glm::UVec2;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::geom::Scene;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct RenderParams {
     pub resolution: UVec2,
     pub samples: usize,
@@ -15,7 +15,7 @@ pub struct RenderParams {
     pub gamma: f32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct UserConfig {
     pub params: RenderParams,
     pub scene: Scene,
