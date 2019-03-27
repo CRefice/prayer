@@ -13,6 +13,7 @@ pub struct RenderParams {
     pub samples: usize,
     pub max_light_bounces: usize,
     pub gamma: f32,
+    pub exposure: f32,
 }
 
 #[derive(Deserialize)]

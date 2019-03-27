@@ -60,7 +60,7 @@ fn main() {
     let w = params.resolution.x;
     let h = params.resolution.y;
     let camera = camera::Camera::looking_at(
-        glm::vec3(-5.0, 0.0, 0.0),
+        glm::vec3(7.0, 1.0, 0.0),
         glm::vec3(0.0, 0.0, 0.0),
         glm::vec3(0.0, 1.0, 0.0),
         80.0,
@@ -85,6 +85,7 @@ fn main() {
                 })
                 .sum::<Vec3>()
                 / params.samples as f32;
+            let color = glm::vec3(1.0, 1.0, 1.0) - glm::exp(&(-color * params.exposure));
             vec![
                 (color.x.max(0.0).min(1.0).powf(1.0 / params.gamma) * 255.99) as u8,
                 (color.y.max(0.0).min(1.0).powf(1.0 / params.gamma) * 255.99) as u8,

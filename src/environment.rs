@@ -31,28 +31,25 @@ impl Environment {
     }
 
     pub fn sample_direction(&self, dir: &Vec3) -> Vec3 {
-        let u = 0.5 + f32::atan2(dir.z, dir.x) / (2.0 * std::f32::consts::PI);
-        let v = 0.5 - f32::asin(dir.y) / std::f32::consts::PI;
+        let u = 0.5 + f32::atan2(dir.z, dir.x) / glm::two_pi::<f32>();
+        let v = 0.5 - f32::asin(dir.y) / glm::pi::<f32>();
         self.sample(u, v)
     }
 
     fn sample(&self, u: f32, v: f32) -> Vec3 {
-        let x = u * (self.width as f32);
-        let y = v * (self.height as f32);
+        assert!(u <= 1.0 && v <= 1.0);
+        let x = u * (self.width - 1) as f32;
+        let y = v * (self.height - 1) as f32;
         let (x1, y1) = (x.floor(), y.floor());
         let (x2, y2) = (x.ceil(), y.ceil());
+        let (tx, ty) = (x - x1, y - y1);
         let f11 = self.pixel_at(x1, y1);
         let f21 = self.pixel_at(x2, y1);
         let f12 = self.pixel_at(x1, y2);
         let f22 = self.pixel_at(x2, y2);
-        let q11 = f11 * (x2 - x) * (y2 - y);
-        let q21 = f21 * (x - x1) * (y2 - y);
-        let q12 = f12 * (x2 - x) * (y - y1);
-        let q22 = f22 * (x - x1) * (y - y1);
-        let num = q11 + q21 + q12 + q22;
-        let denom = (x2 - x1) * (y2 - y1);
-        num / denom;
-        f11
+        let a = f11 * (1.0 - tx) + f21 * tx;
+        let b = f12 * (1.0 - tx) + f22 * tx;
+        a * (1.0 - ty) + b * ty
     }
 
     fn pixel_at(&self, x: f32, y: f32) -> Vec3 {
