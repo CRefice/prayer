@@ -1,18 +1,13 @@
-use std::path::Path;
-
-use serde::de::Error;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
 use super::*;
-use crate::environment::Environment;
+use crate::texture::ColorTexture;
 use crate::ray::Ray;
 
 #[derive(Deserialize)]
 pub struct Scene {
     objects: Vec<Object>,
-
-    #[serde(deserialize_with = "from_str")]
-    pub environment: Environment,
+    pub environment: ColorTexture,
 }
 
 impl Traceable for Scene {
@@ -28,12 +23,4 @@ impl Traceable for Scene {
         }
         result
     }
-}
-
-fn from_str<'de, D>(deserializer: D) -> Result<Environment, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s: &str = Deserialize::deserialize(deserializer)?;
-    Environment::from_file(Path::new(s)).map_err(D::Error::custom)
 }

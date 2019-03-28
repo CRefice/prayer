@@ -1,11 +1,11 @@
 mod camera;
 mod config;
-mod environment;
 mod geom;
 mod material;
 mod ray;
+mod texture;
 
-pub use glm::Vec3;
+pub use glm::{Vec2, Vec3};
 use nalgebra_glm as glm;
 
 use rand::prelude::*;
@@ -15,30 +15,30 @@ use std::path::Path;
 use config::UserConfig;
 use geom::*;
 use ray::Ray;
+use texture::Texture as _;
 
 fn trace(r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
     if depth == 0 {
         return glm::zero();
     }
-    if let Some(result) = scene.trace(r, 0.001, std::f32::MAX) {
-        let material = result.material;
+    if let Some(TraceResult { material, hit }) = scene.trace(r, 0.001, std::f32::MAX) {
+        let RayHit { normal, uv, .. } = hit;
         let w0 = -r.direction;
-        let n = result.hit.normal;
-        let (bounce, pdf) = material.bounce(&w0, &result.hit);
+        let (bounce, pdf) = material.bounce(&w0, &hit);
         let incident = trace(&bounce, scene, depth - 1);
-        let (brdf, ks) = material.brdf(&w0, &bounce.direction, &n);
+        let (brdf, ks) = material.brdf(&w0, &bounce.direction, &normal, &uv);
         let specular = brdf / pdf;
         let diffuse = {
-            let lambert = material.color / std::f32::consts::PI;
-            let kd = (glm::vec3(1.0, 1.0, 1.0) - ks) * (1.0 - material.metalness);
-            let pdf = 1.0 / (2.0 * std::f32::consts::PI);
+            let lambert = material.albedo.sample(&uv) / glm::pi::<f32>();
+            let kd = (glm::vec3(1.0, 1.0, 1.0) - ks) * (1.0 - material.metalness.sample(&uv));
+            let pdf = glm::one_over_two_pi::<f32>();
             kd.component_mul(&lambert) / pdf
         };
-        let costheta = f32::max(glm::dot(&n, &bounce.direction), 0.0);
-        (diffuse + specular).component_mul(&incident) * costheta + material.emission
+        let costheta = f32::max(glm::dot(&normal, &bounce.direction), 0.0);
+        (diffuse + specular).component_mul(&incident) * costheta + material.emission.sample(&uv)
     } else {
         let dir = glm::normalize(&r.direction);
-        scene.environment.sample_direction(&dir)
+        scene.environment.sample(&Sphere::uv_at_dir(&dir))
     }
 }
 

@@ -24,18 +24,38 @@ impl Geometry for Sphere {
             if t > min && t < max {
                 let point = r.point_at(t);
                 let normal = (point - self.center) / self.radius;
-                return Some(RayHit { t, point, normal });
+                let uv = Self::uv_at_dir(&(point - self.center).normalize());
+                return Some(RayHit {
+                    t,
+                    point,
+                    normal,
+                    uv,
+                });
             }
             let t = (-b + f32::sqrt(b * b - a * c)) / a;
             if t > min && t < max {
                 let point = r.point_at(t);
                 let normal = (point - self.center) / self.radius;
-                Some(RayHit { t, point, normal })
+                let uv = Self::uv_at_dir(&(point - self.center).normalize());
+                Some(RayHit {
+                    t,
+                    point,
+                    normal,
+                    uv,
+                })
             } else {
                 None
             }
         } else {
             None
         }
+    }
+}
+
+impl Sphere {
+    pub fn uv_at_dir(dir: &Vec3) -> Vec2 {
+        let u = 0.5 + f32::atan2(dir.z, dir.x) / glm::two_pi::<f32>();
+        let v = 0.5 - f32::asin(dir.y) / glm::pi::<f32>();
+        Vec2::new(u, v)
     }
 }

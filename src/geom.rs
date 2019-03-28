@@ -2,7 +2,7 @@ mod plane;
 mod scene;
 mod sphere;
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 pub use self::plane::*;
 pub use self::scene::*;
@@ -10,7 +10,7 @@ pub use self::sphere::*;
 use crate::material::Material;
 use crate::ray::Ray;
 
-use crate::Vec3;
+use crate::{Vec2, Vec3};
 
 pub trait Geometry {
     fn intersection(&self, ray: &Ray, min: f32, max: f32) -> Option<RayHit>;
@@ -24,9 +24,10 @@ pub struct RayHit {
     pub t: f32,
     pub point: Vec3,
     pub normal: Vec3,
+    pub uv: Vec2,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 #[serde(untagged)]
 pub enum GeomType {
     Sphere(Sphere),
@@ -42,7 +43,7 @@ impl Geometry for GeomType {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct Object {
     pub geometry: GeomType,
     pub material: Material,
