@@ -38,11 +38,12 @@ impl Geometry for Plane {
             let num = glm::dot(&(self.points[0] - r.origin), &normal);
             let t = num / denom;
             let point = r.point_at(t);
-            let u = (self.points[1] - self.points[0]).normalize();
-            let v = (self.points[3] - self.points[0]).normalize();
-            let dir = point.normalize();
-            let uv = glm::vec2(glm::dot(&u, &dir), glm::dot(&v, &dir));
             if self.contains(point) && t > min && t < max {
+                let x = self.points[1] - self.points[0];
+                let y = self.points[3] - self.points[0];
+                let u = glm::dot(&x.normalize(), &(point - self.points[0])) / glm::length(&x);
+                let v = glm::dot(&y.normalize(), &(point - self.points[0])) / glm::length(&y);
+                let uv = glm::vec2(u, v);
                 Some(RayHit {
                     t,
                     point,

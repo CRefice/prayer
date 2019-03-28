@@ -18,7 +18,6 @@ pub trait Texture {
     fn pixel_at(&self, x: u32, y: u32) -> Self::Pixel;
 
     fn sample(&self, uv: &Vec2) -> Self::Pixel {
-        assert!(uv.x <= 1.0 && uv.y <= 1.0);
         let dim = self.dimensions();
         let point = uv.component_mul(&(dim - glm::vec2(1.0, 1.0)));
         let (p1, p2) = (glm::floor(&point), glm::ceil(&point));

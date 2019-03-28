@@ -37,7 +37,7 @@ fn trace(r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
         let costheta = f32::max(glm::dot(&normal, &bounce.direction), 0.0);
         (diffuse + specular).component_mul(&incident) * costheta + material.emission.sample(&uv)
     } else {
-        let dir = glm::normalize(&r.direction);
+        let dir = r.direction.normalize();
         scene.environment.sample(&Sphere::uv_at_dir(&dir))
     }
 }

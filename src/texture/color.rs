@@ -37,7 +37,7 @@ impl Texture for ColorTexture {
 
 fn open<'a, P: AsRef<Path>>(path: P) -> Result<ColorTexture, Box<dyn Error + 'a>> {
     use std::ffi::OsStr;
-    if let Some(".hdr") = path.as_ref().extension().and_then(OsStr::to_str) {
+    if let Some("hdr") = path.as_ref().extension().and_then(OsStr::to_str) {
         let img = hdr::open(path)?;
         Ok(ColorTexture::Hdr(img))
     } else {
@@ -48,7 +48,8 @@ fn open<'a, P: AsRef<Path>>(path: P) -> Result<ColorTexture, Box<dyn Error + 'a>
 
 pub fn rgb_to_float(pix: &image::Rgb<u8>) -> Vec3 {
     let [r, g, b] = pix.data;
-    Vec3::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
+    let vec = Vec3::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0);
+    glm::pow(&vec, &glm::vec3(2.2, 2.2, 2.2))
 }
 
 impl<'de> Deserialize<'de> for ColorTexture {
