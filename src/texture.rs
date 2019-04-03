@@ -1,6 +1,5 @@
 mod color;
 mod grayscale;
-mod hdr;
 
 use std::ops::*;
 

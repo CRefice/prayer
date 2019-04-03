@@ -1,52 +1,64 @@
 use std::error::Error;
+use std::fs::File;
+use std::io::BufReader;
 use std::path::Path;
+
+use image::{self, hdr::HDRDecoder};
 
 use serde::{de::Visitor, Deserialize, Deserializer};
 
-use super::{hdr, Texture};
-use image::{self, RgbImage};
+use super::Texture;
 
 use crate::{Vec2, Vec3};
 use nalgebra_glm as glm;
 
-pub enum ColorTexture {
-    Dyn(RgbImage),
-    Hdr(hdr::HdrImage),
-    Solid(Vec3),
+pub struct ColorTexture {
+    buf: Vec<Vec3>,
+    width: u32,
+    height: u32,
 }
 
 impl Texture for ColorTexture {
     type Pixel = Vec3;
 
     fn dimensions(&self) -> Vec2 {
-        match self {
-            ColorTexture::Dyn(img) => glm::vec2(img.width() as f32, img.height() as f32),
-            ColorTexture::Hdr(img) => glm::vec2(img.width() as f32, img.height() as f32),
-            ColorTexture::Solid(_color) => glm::vec2(100.0, 100.0),
-        }
+        glm::vec2(self.width as f32, self.height as f32)
     }
 
     fn pixel_at(&self, x: u32, y: u32) -> Self::Pixel {
-        match self {
-            ColorTexture::Dyn(img) => rgb_to_float(img.get_pixel(x, y)),
-            ColorTexture::Hdr(img) => glm::make_vec3(&img.get_pixel(x, y).data),
-            ColorTexture::Solid(color) => color.clone(),
-        }
+        let idx = (y * self.width + x) as usize;
+        self.buf[idx]
     }
 }
 
 fn open<'a, P: AsRef<Path>>(path: P) -> Result<ColorTexture, Box<dyn Error + 'a>> {
     use std::ffi::OsStr;
     if let Some("hdr") = path.as_ref().extension().and_then(OsStr::to_str) {
-        let img = hdr::open(path)?;
-        Ok(ColorTexture::Hdr(img))
+        open_hdr(path)
     } else {
-        let img = image::open(path)?;
-        Ok(ColorTexture::Dyn(img.to_rgb()))
+        let img = image::open(path)?.to_rgb();
+        let (width, height) = img.dimensions();
+        let buf = img.pixels().map(rgb_to_float).collect();
+        Ok(ColorTexture { buf, width, height })
     }
 }
 
-pub fn rgb_to_float(pix: &image::Rgb<u8>) -> Vec3 {
+fn open_hdr<'a, P: AsRef<Path>>(path: P) -> Result<ColorTexture, Box<dyn Error + 'a>> {
+    let f = File::open(path)?;
+    let reader = BufReader::new(f);
+    let decoder = HDRDecoder::new(reader)?;
+    let metadata = decoder.metadata();
+    let width = metadata.width;
+    let height = metadata.height;
+    let buf = decoder
+        .read_image_hdr()?
+        .into_iter()
+        .map(|pix| glm::make_vec3(&pix.data))
+        .collect();
+    Ok(ColorTexture { width, height, buf })
+}
+
+fn rgb_to_float(pix: &image::Rgb<u8>) -> Vec3 {
     let [r, g, b] = pix.data;
     let vec = Vec3::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0);
     glm::pow(&vec, &glm::vec3(2.2, 2.2, 2.2))
@@ -73,8 +85,13 @@ impl<'de> Deserialize<'de> for ColorTexture {
 
             // Solid color
             fn visit_seq<A: SeqAccess<'de>>(self, value: A) -> Result<Self::Value, A::Error> {
-                let vec: Vec3 = Deserialize::deserialize(SeqAccessDeserializer::new(value))?;
-                Ok(ColorTexture::Solid(vec))
+                let color: Vec3 = Deserialize::deserialize(SeqAccessDeserializer::new(value))?;
+                let buf = vec![color];
+                Ok(ColorTexture {
+                    buf,
+                    width: 1,
+                    height: 1,
+                })
             }
         }
 
