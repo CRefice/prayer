@@ -1,4 +1,5 @@
 mod camera;
+mod obj;
 mod config;
 mod geom;
 mod material;

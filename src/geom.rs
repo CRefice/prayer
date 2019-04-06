@@ -1,12 +1,15 @@
+mod mesh;
 mod plane;
 mod scene;
 mod sphere;
 
 use serde::Deserialize;
 
+pub use self::mesh::*;
 pub use self::plane::*;
 pub use self::scene::*;
 pub use self::sphere::*;
+
 use crate::material::Material;
 use crate::ray::Ray;
 
@@ -32,6 +35,7 @@ pub struct RayHit {
 pub enum GeomType {
     Sphere(Sphere),
     Plane(Plane),
+    Mesh(Mesh),
 }
 
 impl Geometry for GeomType {
@@ -39,6 +43,7 @@ impl Geometry for GeomType {
         match self {
             GeomType::Sphere(s) => s.intersection(ray, min, max),
             GeomType::Plane(p) => p.intersection(ray, min, max),
+            GeomType::Mesh(m) => m.intersection(ray, min, max),
         }
     }
 }
