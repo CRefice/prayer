@@ -61,7 +61,7 @@ fn main() {
     let w = params.resolution.x;
     let h = params.resolution.y;
     let camera = camera::Camera::looking_at(
-        glm::vec3(7.0, 1.0, 0.0),
+        glm::vec3(0.0, 2.0, -5.0),
         glm::vec3(0.0, 0.0, 0.0),
         glm::vec3(0.0, 1.0, 0.0),
         80.0,

@@ -1,3 +1,5 @@
+mod aabb;
+mod kdtree;
 mod mesh;
 mod plane;
 mod scene;
@@ -5,6 +7,8 @@ mod sphere;
 
 use serde::Deserialize;
 
+pub use self::aabb::*;
+pub use self::kdtree::*;
 pub use self::mesh::*;
 pub use self::plane::*;
 pub use self::scene::*;
