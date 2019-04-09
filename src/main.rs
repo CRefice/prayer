@@ -1,17 +1,16 @@
 mod camera;
-mod obj;
 mod config;
 mod geom;
 mod material;
+mod obj;
 mod ray;
 mod texture;
-
-pub use glm::{Vec2, Vec3};
-use nalgebra_glm as glm;
+mod vec;
 
 use rand::prelude::*;
 use rayon::prelude::*;
 use std::path::Path;
+use vec::*;
 
 use config::UserConfig;
 use geom::*;

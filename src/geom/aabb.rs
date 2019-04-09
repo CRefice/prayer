@@ -1,25 +1,13 @@
-use nalgebra_glm as glm;
-
 use crate::ray::Ray;
-use crate::Vec3;
+use crate::vec::{self, glm, Vec3};
 
 #[derive(Debug)]
 pub struct AABB {
-    min: Vec3,
-    max: Vec3,
+    pub min: Vec3,
+    pub max: Vec3,
 }
 
 impl AABB {
-    pub fn contains(&self, point: &Vec3) -> bool {
-        point >= &self.min && point <= &self.max
-    }
-
-    pub fn intersex(&self, b: &AABB) -> bool {
-        (self.min.x <= b.max.x && self.max.x >= b.min.x)
-            && (self.min.y <= b.max.y && self.max.y >= b.min.y)
-            && (self.min.z <= b.max.z && self.max.z >= b.min.z)
-    }
-
     pub fn intersects(&self, r: &Ray) -> bool {
         let tx1 = (self.min.x - r.origin.x) * r.inv_dir.x;
         let tx2 = (self.max.x - r.origin.x) * r.inv_dir.x;
@@ -44,43 +32,11 @@ impl AABB {
         2.0 * ((width * height) + (height * depth) + (width * depth))
     }
 
-    pub fn split_x(&self, x: f32) -> (AABB, AABB) {
+    pub fn split_dimension(&self, x: f32, dimension: usize) -> (AABB, AABB) {
         let mut left_max = self.max;
-        left_max.x = x;
+        left_max.data[dimension] = x;
         let mut right_min = self.min;
-        right_min.x = x;
-        let left = AABB {
-            min: self.min,
-            max: left_max,
-        };
-        let right = AABB {
-            min: right_min,
-            max: self.max,
-        };
-        (left, right)
-    }
-
-    pub fn split_y(&self, y: f32) -> (AABB, AABB) {
-        let mut left_max = self.max;
-        left_max.y = y;
-        let mut right_min = self.min;
-        right_min.y = y;
-        let left = AABB {
-            min: self.min,
-            max: left_max,
-        };
-        let right = AABB {
-            min: right_min,
-            max: self.max,
-        };
-        (left, right)
-    }
-
-    pub fn split_z(&self, z: f32) -> (AABB, AABB) {
-        let mut left_max = self.max;
-        left_max.z = z;
-        let mut right_min = self.min;
-        right_min.z = z;
+        right_min.data[dimension] = x;
         let left = AABB {
             min: self.min,
             max: left_max,
@@ -103,28 +59,8 @@ where
     }
 }
 
-fn minmax_vec(minmax: (Vec3, Vec3), a: &Vec3) -> (Vec3, Vec3) {
-    let (mut min, mut max) = minmax;
-    if a.x > max.x {
-        max.x = a.x
-    } else if a.x < min.x {
-        min.x = a.x
-    }
-    if a.y > max.y {
-        max.y = a.y
-    } else if a.y < min.y {
-        min.y = a.y
-    }
-    if a.z > max.z {
-        max.z = a.z
-    } else if a.z < min.z {
-        min.z = a.z
-    }
-    (min, max)
-}
-
 fn component_minmax<'a, I: Iterator<Item = &'a Vec3>>(mut it: I) -> Option<(Vec3, Vec3)> {
     let a = it.next()?.clone();
     let minmax = (a, a);
-    Some(it.fold(minmax, minmax_vec))
+    Some(it.fold(minmax, vec::component_minmax))
 }

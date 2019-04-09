@@ -1,7 +1,6 @@
 use std::path::Path;
 
 use nalgebra_glm as glm;
-use rayon::prelude::*;
 use serde::{Deserialize, Deserializer};
 
 use super::{Geometry, KdTree, RayHit, AABB};
@@ -36,16 +35,8 @@ impl Triangle {
         self.verts.into_iter()
     }
 
-    pub fn par_iter(&self) -> impl ParallelIterator<Item = &Vertex> {
-        self.verts.into_par_iter()
-    }
-
     pub fn positions(&self) -> (Vec3, Vec3, Vec3) {
         (self.verts[0].pos, self.verts[1].pos, self.verts[2].pos)
-    }
-
-    pub fn center(&self) -> Vec3 {
-        (self.verts[0].pos + self.verts[1].pos + self.verts[2].pos) / 3.0
     }
 
     fn interpolate(&self, p: &Vec3) -> Vertex {
