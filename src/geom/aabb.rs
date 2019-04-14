@@ -1,10 +1,14 @@
 use crate::ray::Ray;
 use crate::vec::{self, glm, Vec3};
 
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct AABB {
     pub min: Vec3,
     pub max: Vec3,
+}
+
+pub trait Bounds {
+    fn bounds(&self) -> AABB;
 }
 
 impl AABB {
@@ -32,6 +36,12 @@ impl AABB {
         2.0 * ((width * height) + (height * depth) + (width * depth))
     }
 
+    pub fn union(&self, other: &AABB) -> AABB {
+        let (min, max) = vec::component_minmax((self.min, self.max), &other.min);
+        let (min, max) = vec::component_minmax((min, max), &other.max);
+        AABB { min, max }
+    }
+
     pub fn split_dimension(&self, x: f32, dimension: usize) -> (AABB, AABB) {
         let mut left_max = self.max;
         left_max.data[dimension] = x;
@@ -49,18 +59,33 @@ impl AABB {
     }
 }
 
+impl Default for AABB {
+    fn default() -> Self {
+        AABB {
+            min: glm::zero(),
+            max: glm::zero(),
+        }
+    }
+}
+
+impl Bounds for AABB {
+    fn bounds(&self) -> AABB {
+        self.clone()
+    }
+}
+
 impl<'a, I> From<I> for AABB
 where
     I: IntoIterator<Item = &'a Vec3>,
 {
-    fn from(it: I) -> Self {
+    fn from(it: I) -> AABB {
         let (min, max) = component_minmax(it.into_iter()).unwrap_or((glm::zero(), glm::zero()));
         AABB { min, max }
     }
 }
 
 fn component_minmax<'a, I: Iterator<Item = &'a Vec3>>(mut it: I) -> Option<(Vec3, Vec3)> {
-    let a = it.next()?.clone();
+    let a = *it.next()?;
     let minmax = (a, a);
     Some(it.fold(minmax, vec::component_minmax))
 }

@@ -52,6 +52,16 @@ impl Geometry for GeomType {
     }
 }
 
+impl Bounds for GeomType {
+    fn bounds(&self) -> AABB {
+        match self {
+            GeomType::Sphere(s) => s.bounds(),
+            GeomType::Plane(p) => p.bounds(),
+            GeomType::Mesh(m) => m.bounds(),
+        }
+    }
+}
+
 #[derive(Deserialize)]
 pub struct Object {
     pub geometry: GeomType,

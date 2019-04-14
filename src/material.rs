@@ -47,7 +47,7 @@ impl Material {
     pub fn bounce(&self, w0: &Vec3, hit: &RayHit) -> (Ray, f32) {
         let n = hit.normal;
         let mut rng = rand::thread_rng();
-        let roughness = self.roughness.sample(&hit.uv);
+        let roughness = self.roughness.sample(hit.uv);
         let theta = self.importance_theta(roughness);
         let phi: f32 = rng.gen::<f32>() * 2.0 * std::f32::consts::PI;
 
@@ -65,7 +65,7 @@ impl Material {
     }
 
     /// Return type is (brdf, fresnel)
-    pub fn brdf(&self, w0: &Vec3, wi: &Vec3, n: &Vec3, uv: &Vec2) -> (Vec3, Vec3) {
+    pub fn brdf(&self, w0: &Vec3, wi: &Vec3, n: &Vec3, uv: Vec2) -> (Vec3, Vec3) {
         let h = glm::normalize(&(w0 + wi));
         let d = normal_distribution(&n, &h, self.roughness.sample(uv));
         let f0 = glm::vec3(0.04, 0.04, 0.04);

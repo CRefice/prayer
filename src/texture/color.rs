@@ -38,7 +38,7 @@ fn open<'a, P: AsRef<Path>>(path: P) -> Result<ColorTexture, Box<dyn Error + 'a>
     } else {
         let img = image::open(path)?.to_rgb();
         let (width, height) = img.dimensions();
-        let buf = img.pixels().map(rgb_to_float).collect();
+        let buf = img.pixels().map(|p| rgb_to_float(*p)).collect();
         Ok(ColorTexture { buf, width, height })
     }
 }
@@ -58,9 +58,9 @@ fn open_hdr<'a, P: AsRef<Path>>(path: P) -> Result<ColorTexture, Box<dyn Error +
     Ok(ColorTexture { width, height, buf })
 }
 
-fn rgb_to_float(pix: &image::Rgb<u8>) -> Vec3 {
+fn rgb_to_float(pix: image::Rgb<u8>) -> Vec3 {
     let [r, g, b] = pix.data;
-    let vec = Vec3::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0);
+    let vec = Vec3::new(f32::from(r) / 255.0, f32::from(g) / 255.0, f32::from(b) as f32 / 255.0);
     glm::pow(&vec, &glm::vec3(2.2, 2.2, 2.2))
 }
 

@@ -3,25 +3,25 @@ use std::path::Path;
 use nalgebra_glm as glm;
 use serde::{Deserialize, Deserializer};
 
-use super::{Geometry, KdTree, RayHit, AABB};
+use super::*;
 use crate::obj;
 use crate::ray::Ray;
 use crate::{Vec2, Vec3};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Vertex {
     pub pos: Vec3,
     pub normal: Vec3,
     pub uv: Vec2,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Triangle {
     verts: [Vertex; 3],
 }
 
 pub struct Mesh {
-    tree: KdTree,
+    tree: KdTree<Triangle>,
 }
 
 impl Triangle {
@@ -29,10 +29,6 @@ impl Triangle {
         Triangle {
             verts: [v1, v2, v3],
         }
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = &Vertex> {
-        self.verts.into_iter()
     }
 
     pub fn positions(&self) -> (Vec3, Vec3, Vec3) {
@@ -94,11 +90,16 @@ impl Geometry for Triangle {
     }
 }
 
+impl Bounds for Triangle {
+    fn bounds(&self) -> AABB {
+        AABB::from(self.verts.iter().map(|v| &v.pos))
+    }
+}
+
 impl Mesh {
     pub fn from_file<P: AsRef<Path>>(path: P) -> std::io::Result<Self> {
         let tris = obj::load(path)?;
-        let bounds = AABB::from(tris.iter().flat_map(|t| t.iter()).map(|v| &v.pos));
-        let tree = KdTree::build(bounds, tris);
+        let tree = KdTree::new(tris);
         Ok(Mesh { tree })
     }
 }
@@ -106,6 +107,12 @@ impl Mesh {
 impl Geometry for Mesh {
     fn intersection(&self, r: &Ray, min: f32, max: f32) -> Option<RayHit> {
         self.tree.intersection(r, min, max)
+    }
+}
+
+impl Bounds for Mesh {
+    fn bounds(&self) -> AABB {
+        self.tree.bounds()
     }
 }
 

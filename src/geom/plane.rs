@@ -58,3 +58,9 @@ impl Geometry for Plane {
         }
     }
 }
+
+impl Bounds for Plane {
+    fn bounds(&self) -> AABB {
+        AABB::from(self.points.iter())
+    }
+}

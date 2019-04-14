@@ -62,9 +62,9 @@ fn parse_uv<'a, I: Iterator<Item = &'a str>>(iter: I) -> Option<Vec2> {
 
 fn parse_triangle<'a, I: Iterator<Item = &'a str>>(
     iter: I,
-    verts: &Vec<Vec3>,
-    coords: &Vec<Vec2>,
-    norms: &Vec<Vec3>,
+    verts: &[Vec3],
+    coords: &[Vec2],
+    norms: &[Vec3],
 ) -> Option<Triangle> {
     let mut iter = iter.map(|s| {
         let mut cmps = s.split('/');
@@ -106,7 +106,7 @@ fn triangle_normal(p1: &Vec3, p2: &Vec3, p3: &Vec3) -> Vec3 {
     e1.cross(&e2).normalize()
 }
 
-fn index_wrap<T: Clone>(i: isize, vec: &Vec<T>) -> T {
+fn index_wrap<T: Clone>(i: isize, vec: &[T]) -> T {
     if i < 0 {
         vec[(vec.len() as isize - i) as usize].clone()
     } else {

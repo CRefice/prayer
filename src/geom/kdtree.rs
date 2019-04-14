@@ -3,18 +3,17 @@ use rayon::prelude::*;
 use crate::Ray;
 
 use super::aabb::*;
-use super::mesh::*;
 use super::{Geometry, RayHit};
 
-pub enum KdTree {
+pub enum KdTree<T> {
     Leaf {
         bounds: AABB,
-        tris: Vec<Triangle>,
+        geoms: Vec<T>,
     },
     Node {
         bounds: AABB,
-        left: Box<KdTree>,
-        right: Box<KdTree>,
+        left: Box<KdTree<T>>,
+        right: Box<KdTree<T>>,
     },
 }
 
@@ -24,67 +23,66 @@ struct Split {
     cost: f32,
 }
 
-impl KdTree {
-    pub fn build(bounds: AABB, tris: Vec<Triangle>) -> Self {
-        let cost = cost(&bounds, tris.len());
+impl<T: Bounds + Clone + Sync> KdTree<T> {
+    pub fn new(geoms: Vec<T>) -> Self {
+        let bounds = total_bounds(&geoms);
+        Self::build(bounds, geoms)
+    }
+
+    fn build(bounds: AABB, geoms: Vec<T>) -> Self {
+        let cost = cost(&bounds, geoms.len());
         let splits = (0..3)
             .into_par_iter()
-            .filter_map(|dim| optimal_split(tris.iter(), &bounds, dim as usize));
+            .filter_map(|dim| optimal_split(geoms.iter(), &bounds, dim as usize));
         let min = splits.min_by(|a, b| a.cost.partial_cmp(&b.cost).expect("Tried to compare NaN"));
         match &min {
             Some(split) if split.cost < cost => {
-                //dbg!(&bounds);
-                //dbg!(&split);
                 let (left, right) = bounds.split_dimension(split.pos, split.dim);
-                assert!(left.surface_area() < bounds.surface_area());
-                assert!(right.surface_area() < bounds.surface_area());
-                //eprintln!("Recursing further");
-                let (left_tris, right_tris) = partition_dimension(tris, split.pos, split.dim);
+                let (left_geoms, right_geoms) = partition_dimension(geoms, split.pos, split.dim);
                 KdTree::Node {
                     bounds,
-                    left: Box::new(KdTree::build(left, left_tris)),
-                    right: Box::new(KdTree::build(right, right_tris)),
+                    left: Box::new(KdTree::build(left, left_geoms)),
+                    right: Box::new(KdTree::build(right, right_geoms)),
                 }
             }
-            _ => KdTree::Leaf { bounds, tris },
+            _ => KdTree::Leaf { bounds, geoms },
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq, PartialOrd)]
 enum State {
     Start,
     End,
 }
 
-use std::cmp::Ordering;
-impl PartialOrd for State {
-    fn partial_cmp(&self, b: &State) -> Option<Ordering> {
-        Some(match (self, b) {
-            (State::Start, State::Start) => Ordering::Equal,
-            (State::Start, State::End) => Ordering::Less,
-            (State::End, State::Start) => Ordering::Greater,
-            (State::End, State::End) => Ordering::Equal,
-        })
-    }
-}
-
-#[derive(Debug)]
+#[derive(PartialEq, PartialOrd)]
 struct Marker {
-    state: State,
     pos: f32,
+    state: State,
 }
 
-fn cost(aabb: &AABB, num_tris: usize) -> f32 {
+fn cost(aabb: &AABB, num_geoms: usize) -> f32 {
     const INTERSECT_COST: f32 = 2.0;
-    INTERSECT_COST * aabb.surface_area() * num_tris as f32
+    INTERSECT_COST * aabb.surface_area() * num_geoms as f32
 }
 
-fn sorted_markers<'a, I: Iterator<Item = &'a Triangle>>(tris: I, dimension: usize) -> Vec<Marker> {
-    let count = tris.size_hint().1.unwrap_or(0);
-    let bounds = tris.map(|t| AABB::from(t.iter().map(|v| &v.pos)));
+fn total_bounds<G: Bounds>(geoms: &[G]) -> AABB {
+    let bounds = geoms.get(0).map(|g| g.bounds()).unwrap_or_default();
+    geoms
+        .iter()
+        .map(Bounds::bounds)
+        .fold(bounds, |a, b| AABB::union(&a, &b))
+}
+
+fn sorted_markers<'a, I, G>(geoms: I, dimension: usize) -> Vec<Marker>
+where
+    I: Iterator<Item = &'a G>,
+    G: Bounds + 'a,
+{
+    let count = geoms.size_hint().1.unwrap_or(0);
     let mut markers = Vec::with_capacity(count * 2);
-    for bound in bounds {
+    for bound in geoms.map(Bounds::bounds) {
         let start = Marker {
             state: State::Start,
             pos: bound.min[dimension],
@@ -96,21 +94,17 @@ fn sorted_markers<'a, I: Iterator<Item = &'a Triangle>>(tris: I, dimension: usiz
         markers.push(start);
         markers.push(end);
     }
-    markers.par_sort_by(|a, b| {
-        (a.pos, &a.state)
-            .partial_cmp(&(b.pos, &b.state))
-            .expect("Tried sorting NaNs")
-    });
+    markers.par_sort_by(|a, b| a.partial_cmp(&b).expect("Tried sorting NaNs"));
     markers
 }
 
-fn optimal_split<'a, I: Iterator<Item = &'a Triangle>>(
-    tris: I,
-    bounds: &AABB,
-    dim: usize,
-) -> Option<Split> {
+fn optimal_split<'a, I, G>(geoms: I, bounds: &AABB, dim: usize) -> Option<Split>
+where
+    I: Iterator<Item = &'a G>,
+    G: Bounds + 'a,
+{
     const TRAVERSAL_COST: f32 = 1.0;
-    let markers = sorted_markers(tris, dim);
+    let markers = sorted_markers(geoms, dim);
     let count = markers.len() / 2;
     let (mut left, mut right): (usize, usize) = (0, count);
     dedup_splits(
@@ -154,31 +148,32 @@ fn dedup_splits<I: Iterator<Item = Split>>(
     Dedup { it }
 }
 
-fn partition_dimension<I>(tris: I, split: f32, dimension: usize) -> (Vec<Triangle>, Vec<Triangle>)
+fn partition_dimension<I, G>(geoms: I, split: f32, dimension: usize) -> (Vec<G>, Vec<G>)
 where
-    I: IntoIterator<Item = Triangle>,
+    I: IntoIterator<Item = G>,
+    G: Bounds + Clone,
 {
     let mut l_accum = Vec::new();
     let mut r_accum = Vec::new();
-    for t in tris.into_iter() {
-        let bounds = AABB::from(t.iter().map(|t| &t.pos));
+    for g in geoms.into_iter() {
+        let bounds = g.bounds();
         if bounds.min[dimension] <= split {
-            l_accum.push(t.clone());
+            l_accum.push(g.clone());
         }
         if bounds.max[dimension] > split {
-            r_accum.push(t);
+            r_accum.push(g);
         }
     }
     (l_accum, r_accum)
 }
 
-impl Geometry for KdTree {
+impl<T: Geometry> Geometry for KdTree<T> {
     fn intersection(&self, r: &Ray, min: f32, max: f32) -> Option<RayHit> {
         match self {
-            KdTree::Leaf { bounds, tris } if bounds.intersects(r) => {
+            KdTree::Leaf { bounds, geoms } if bounds.intersects(r) => {
                 let mut max = max;
                 let mut result = None;
-                for tri in tris {
+                for tri in geoms {
                     let hit_result = tri.intersection(r, min, max);
                     if let Some(hit) = &hit_result {
                         max = hit.t;
@@ -201,6 +196,14 @@ impl Geometry for KdTree {
                 right.or(left)
             }
             _ => None,
+        }
+    }
+}
+
+impl<T> Bounds for KdTree<T> {
+    fn bounds(&self) -> AABB {
+        match self {
+            KdTree::Leaf { bounds, .. } | KdTree::Node { bounds, .. } => bounds.clone(),
         }
     }
 }

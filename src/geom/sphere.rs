@@ -52,6 +52,15 @@ impl Geometry for Sphere {
     }
 }
 
+impl Bounds for Sphere {
+    fn bounds(&self) -> AABB {
+        let r_vec = glm::vec3(self.radius, self.radius, self.radius);
+        let min = self.center - r_vec;
+        let max = self.center + r_vec;
+        AABB { min, max }
+    }
+}
+
 impl Sphere {
     pub fn uv_at_dir(dir: &Vec3) -> Vec2 {
         let u = 0.5 + f32::atan2(dir.z, dir.x) / glm::two_pi::<f32>();

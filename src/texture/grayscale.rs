@@ -26,7 +26,7 @@ impl Texture for GrayScaleTexture {
 
     fn pixel_at(&self, x: u32, y: u32) -> Self::Pixel {
         match self {
-            GrayScaleTexture::Tex(img) => img.get_pixel(x, y).data[0] as f32 / 255.0,
+            GrayScaleTexture::Tex(img) => f32::from(img.get_pixel(x, y).data[0]) / 255.0,
             GrayScaleTexture::Solid(color) => *color,
         }
     }
