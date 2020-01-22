@@ -32,6 +32,8 @@ pub struct Material {
     pub albedo: ColorTexture,
     pub metalness: GrayScaleTexture,
     pub roughness: GrayScaleTexture,
+
+    #[serde(default)]
     pub emission: ColorTexture,
 }
 

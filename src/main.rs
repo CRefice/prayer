@@ -9,7 +9,7 @@ mod vec;
 
 use rand::prelude::*;
 use rayon::prelude::*;
-use std::path::Path;
+use std::path::PathBuf;
 use vec::*;
 
 use config::UserConfig;
@@ -43,19 +43,24 @@ fn trace(r: &Ray, scene: &Scene, depth: usize) -> Vec3 {
 }
 
 fn quit_with_usage() -> ! {
-    eprintln!("Usage: prayer [OUTPUT] [CONFIG]");
+    eprintln!("Usage: prayer CONFIG [OUTPUT]");
     std::process::exit(1)
 }
 
 fn main() {
     let mut args = std::env::args();
-    let image = args.nth(1).unwrap_or_else(|| quit_with_usage());
-    let config = args.next().unwrap_or_else(|| quit_with_usage());
-    let UserConfig { params, scene } =
-        UserConfig::from_file(Path::new(&config)).unwrap_or_else(|e| {
-            eprintln!("{}", e);
-            std::process::exit(1)
-        });
+    let config = args
+        .nth(1)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| quit_with_usage());
+    let image = args
+        .next()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| config.with_extension("png"));
+    let UserConfig { params, scene } = UserConfig::from_file(&config).unwrap_or_else(|e| {
+        eprintln!("Error parsing {}: {}", config.display(), e);
+        std::process::exit(1)
+    });
 
     let w = params.resolution.x;
     let h = params.resolution.y;

@@ -2,36 +2,38 @@
 resolution = [800, 800]
 samples = 100
 max_light_bounces = 5
+exposure = 1.0
 gamma = 2.2
 
 [scene]
+environment = [0, 0, 0]
 # Walls
 [[scene.objects]]
 geometry = { center = [1005,2,0], radius = 1000 }
-material = { color = [1,0,0], metalness = 0, roughness = 1, emission = [0,0,0] }
+material = { albedo = [1,0,0], metalness = 0, roughness = 1 }
 [[scene.objects]]
 geometry = { center = [-1005,2,0], radius = 1000 }
-material = { color = [0,0,1], metalness = 0, roughness = 1, emission = [0,0,0] }
+material = { albedo = [0,0,1], metalness = 0, roughness = 1 }
 [[scene.objects]]
 geometry = { center = [0,1005,0], radius = 1000 }
-material = { color = [1,1,1], metalness = 0, roughness = 1, emission = [0,0,0] }
+material = { albedo = [1,1,1], metalness = 0, roughness = 1 }
 [[scene.objects]]
 geometry = { center = [0,-1003,0], radius = 1000 }
-material = { color = [1,1,1], metalness = 0, roughness = 1, emission = [0,0,0] }
+material = { albedo = [1,1,1], metalness = 0, roughness = 1 }
 [[scene.objects]]
 geometry = { center = [0,0,1005], radius = 1000 }
-material = { color = [1,1,1], metalness = 0, roughness = 1, emission = [0,0,0] }
+material = { albedo = [1,1,1], metalness = 0, roughness = 1 }
 [[scene.objects]]
 geometry = { center = [0,0,-1006], radius = 1000 }
-material = { color = [0,1,0], metalness = 0, roughness = 1, emission = [0,0,0] }
+material = { albedo = [0,1,0], metalness = 0, roughness = 1 }
 # Lights
 [[scene.objects]]
 geometry = { center = [0,4,0], radius = 1 }
-material = { color = [0,1,0], metalness = 0, roughness = 1, emission = [5,5,5] }
+material = { albedo = [0,1,0], metalness = 0, roughness = 1, emission = [5,5,5] }
 # Spheres
 [[scene.objects]]
 geometry = { center = [2,-2,0], radius = 1 }
-material = { color = [0.8,0.2,0.2], metalness = 1, roughness = 0.3, emission = [0,0,0] }
+material = { albedo = [0.8,0.2,0.2], metalness = 1, roughness = 0.3 }
 [[scene.objects]]
 geometry = { center = [-2,-2,0], radius = 1 }
-material = { color = [0.8,0.2,0.2], metalness = 0, roughness = 1, emission = [0,0,0] }
+material = { albedo = [0.8,0.2,0.2], metalness = 0, roughness = 1 }

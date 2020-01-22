@@ -18,6 +18,22 @@ pub struct ColorTexture {
     height: u32,
 }
 
+impl ColorTexture {
+    pub fn solid(color: Vec3) -> Self {
+        ColorTexture {
+            buf: vec![color],
+            width: 1,
+            height: 1,
+        }
+    }
+}
+
+impl Default for ColorTexture {
+    fn default() -> Self {
+        Self::solid(Vec3::new(0.0, 0.0, 0.0))
+    }
+}
+
 impl Texture for ColorTexture {
     type Pixel = Vec3;
 
@@ -60,7 +76,11 @@ fn open_hdr<'a, P: AsRef<Path>>(path: P) -> Result<ColorTexture, Box<dyn Error +
 
 fn rgb_to_float(pix: image::Rgb<u8>) -> Vec3 {
     let [r, g, b] = pix.data;
-    let vec = Vec3::new(f32::from(r) / 255.0, f32::from(g) / 255.0, f32::from(b) as f32 / 255.0);
+    let vec = Vec3::new(
+        f32::from(r) / 255.0,
+        f32::from(g) / 255.0,
+        f32::from(b) as f32 / 255.0,
+    );
     glm::pow(&vec, &glm::vec3(2.2, 2.2, 2.2))
 }
 
@@ -86,12 +106,7 @@ impl<'de> Deserialize<'de> for ColorTexture {
             // Solid color
             fn visit_seq<A: SeqAccess<'de>>(self, value: A) -> Result<Self::Value, A::Error> {
                 let color: Vec3 = Deserialize::deserialize(SeqAccessDeserializer::new(value))?;
-                let buf = vec![color];
-                Ok(ColorTexture {
-                    buf,
-                    width: 1,
-                    height: 1,
-                })
+                Ok(ColorTexture::solid(color))
             }
         }
 
