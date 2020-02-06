@@ -1,8 +1,8 @@
 use serde::Deserialize;
 
 use super::*;
-use crate::texture::ColorTexture;
 use crate::ray::Ray;
+use crate::texture::ColorTexture;
 
 #[derive(Deserialize)]
 pub struct Scene {

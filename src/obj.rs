@@ -107,8 +107,8 @@ fn triangle_normal(p1: &Vec3, p2: &Vec3, p3: &Vec3) -> Vec3 {
 }
 
 fn index_wrap<T: Clone>(i: isize, vec: &[T]) -> T {
-    if i < 0 {
-        vec[(vec.len() as isize - i) as usize].clone()
+    if i.is_negative() {
+        vec[vec.len() - i.wrapping_abs() as usize].clone()
     } else {
         vec[i as usize - 1].clone()
     }

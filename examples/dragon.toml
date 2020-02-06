@@ -1,0 +1,12 @@
+[params]
+resolution = [800, 800]
+samples = 5
+max_light_bounces = 5
+exposure = 1.0
+gamma = 2.2
+
+[scene]
+environment = [0.6, 0.6, 0.9]
+[[scene.objects]]
+geometry = "meshes/bunny.obj"
+material = { albedo = [0.9, 0.0, 0.0], metalness = 0, roughness = 1 }

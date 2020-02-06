@@ -1,5 +1,8 @@
 .cargo/
+target/
 
-/*.png
-/target
+meshes/
+textures/
+*.png
+
 **/*.rs.bk
