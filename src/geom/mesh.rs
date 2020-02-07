@@ -65,7 +65,7 @@ impl Geometry for Triangle {
         let det = e1.dot(&pvec);
 
         // Cull backfaces by ignoring negative det
-        if det > 0.0001 {
+        if det.is_sign_positive() {
             let idet = 1.0 / det;
             let tvec = r.origin - v0;
             let qvec = tvec.cross(&e1);

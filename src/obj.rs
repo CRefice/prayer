@@ -20,24 +20,18 @@ pub fn load<P: AsRef<Path>>(path: P) -> std::io::Result<Vec<Triangle>> {
     {
         match iter.next() {
             Some("v") => {
-                if let Some(pos) = parse_vec3(iter) {
-                    verts.push(pos);
-                }
+                verts.push(parse_vec3(iter).expect("Unable to parse vertex position"));
             }
             Some("vt") => {
-                if let Some(norm) = parse_uv(iter) {
-                    coords.push(norm);
-                }
+                coords.push(parse_uv(iter).expect("Unable to parse vertex coordinate"));
             }
             Some("vn") => {
-                if let Some(norm) = parse_vec3(iter) {
-                    norms.push(norm);
-                }
+                norms.push(parse_vec3(iter).expect("Unable to parse vertex normal"));
             }
             Some("f") => {
-                if let Some(face) = parse_triangle(iter, &verts, &coords, &norms) {
-                    tris.push(face);
-                }
+                tris.push(
+                    parse_triangle(iter, &verts, &coords, &norms).expect("Unable to parse face"),
+                );
             }
             _ => (),
         }
@@ -68,12 +62,11 @@ fn parse_triangle<'a, I: Iterator<Item = &'a str>>(
 ) -> Option<Triangle> {
     let mut iter = iter.map(|s| {
         let mut cmps = s.split('/');
-        let pos = index_wrap(
-            cmps.next()
-                .and_then(|s| s.parse::<isize>().ok())
-                .expect("Position required for triangle definition"),
-            verts,
-        );
+        let pos = cmps
+            .next()
+            .and_then(|s| s.parse::<isize>().ok())
+            .map(|i| index_wrap(i, verts))
+            .expect("Position required for triangle definition");
         let coord = cmps
             .next()
             .and_then(|s| s.parse::<isize>().ok())
