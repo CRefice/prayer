@@ -58,7 +58,7 @@ fn main() {
         .map(PathBuf::from)
         .unwrap_or_else(|| config.with_extension("png"));
     let UserConfig { params, scene } = UserConfig::from_file(&config).unwrap_or_else(|e| {
-        eprintln!("Error parsing {}: {}", config.display(), e);
+        eprintln!("Could not parse scene file {}: {}", config.display(), e);
         std::process::exit(1)
     });
 
@@ -98,5 +98,8 @@ fn main() {
             ]
         })
         .collect::<Vec<_>>();
-    image::save_buffer(&image, &buffer, w, h, image::RGB(8)).unwrap()
+    image::save_buffer(&image, &buffer, w, h, image::RGB(8)).unwrap_or_else(|e| {
+        eprintln!("Could not write image file to {}: {}", image.display(), e);
+        std::process::exit(1)
+    });
 }
