@@ -109,7 +109,6 @@ impl<'de> Deserialize<'de> for ColorTexture {
                 Ok(ColorTexture::solid(color))
             }
         }
-
         deserializer.deserialize_any(TexVisitor)
     }
 }

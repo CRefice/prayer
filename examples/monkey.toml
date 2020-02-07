@@ -1,0 +1,12 @@
+[params]
+resolution = [800, 800]
+samples = 100
+max_light_bounces = 5
+exposure = 1.0
+gamma = 2.2
+
+[scene]
+environment = "textures/sunset.hdr"
+[[scene.objects]]
+geometry = "meshes/monkey.obj"
+material = { albedo = [0.8, 0.2, 0.3], metalness = 0.0, roughness = 0.4 }

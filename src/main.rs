@@ -65,10 +65,10 @@ fn main() {
     let w = params.resolution.x;
     let h = params.resolution.y;
     let camera = camera::Camera::looking_at(
-        glm::vec3(-1.0, 0.5, -0.5),
-        glm::vec3(0.0, 0.0, 0.0),
+        params.camera_pos,
+        params.looking_at,
         glm::vec3(0.0, 1.0, 0.0),
-        80.0,
+        params.fov,
         w as f32 / h as f32,
     );
 
