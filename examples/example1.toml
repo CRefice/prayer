@@ -1,9 +1,12 @@
 [params]
 resolution = [800, 800]
-samples = 100
-max_light_bounces = 5
+samples = 400
+max_light_bounces = 10
 exposure = 1.0
 gamma = 2.2
+fov = 100
+camera_pos = [0.0, 0.0, -5.0]
+looking_at = [0.0, 0.0, 0.0]
 
 [scene]
 environment = [0, 0, 0]
@@ -13,7 +16,7 @@ geometry = { center = [1005,2,0], radius = 1000 }
 material = { albedo = [1,0,0], metalness = 0, roughness = 1 }
 [[scene.objects]]
 geometry = { center = [-1005,2,0], radius = 1000 }
-material = { albedo = [0,0,1], metalness = 0, roughness = 1 }
+material = { albedo = [0,1,0], metalness = 0, roughness = 1 }
 [[scene.objects]]
 geometry = { center = [0,1005,0], radius = 1000 }
 material = { albedo = [1,1,1], metalness = 0, roughness = 1 }
@@ -25,10 +28,10 @@ geometry = { center = [0,0,1005], radius = 1000 }
 material = { albedo = [1,1,1], metalness = 0, roughness = 1 }
 [[scene.objects]]
 geometry = { center = [0,0,-1006], radius = 1000 }
-material = { albedo = [0,1,0], metalness = 0, roughness = 1 }
+material = { albedo = [0,0,1], metalness = 0, roughness = 1 }
 # Lights
 [[scene.objects]]
-geometry = { center = [0,4,0], radius = 1 }
+geometry = { center = [0,5,0], radius = 1 }
 material = { albedo = [0,1,0], metalness = 0, roughness = 1, emission = [5,5,5] }
 # Spheres
 [[scene.objects]]

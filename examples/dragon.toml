@@ -1,12 +1,12 @@
 [params]
 resolution = [800, 800]
-samples = 1000
+samples = 50
 max_light_bounces = 8
-camera_pos = [-0.6, 0.3, -0.4666]
-looking_at = [0.1, 0.0, 0.0]
+camera_pos = [0.0, 0.12, 0.2]
+looking_at = [0.0, 0.1, 0.1]
 
 [scene]
-environment = "textures/sunset.hdr"
+environment = "examples/textures/sky.hdr"
 [[scene.objects]]
-geometry = "meshes/dragon.obj"
+geometry = "examples/meshes/bunny.obj"
 material = { albedo = [0.9, 0.69, 0.22], metalness = 1.0, roughness = 0.3 }

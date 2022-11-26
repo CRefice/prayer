@@ -7,9 +7,11 @@ mod ray;
 mod texture;
 mod vec;
 
+use indicatif::{ParallelProgressIterator as _, ProgressBar, ProgressStyle};
 use rand::prelude::*;
 use rayon::prelude::*;
 use std::path::PathBuf;
+use std::time::Instant;
 use vec::*;
 
 use config::UserConfig;
@@ -62,6 +64,7 @@ fn main() {
         std::process::exit(1)
     });
 
+    println!("Parsed scene file.");
     let w = params.resolution.x;
     let h = params.resolution.y;
     let camera = camera::Camera::looking_at(
@@ -72,8 +75,17 @@ fn main() {
         w as f32 / h as f32,
     );
 
-    let buffer = (0..w * h)
+    let num_pixels = w * h;
+    let pb = ProgressBar::new(num_pixels.into());
+    pb.set_style(
+        ProgressStyle::default_bar().template("Rendering... {bar:40} {percent}% (ETA: {eta})"),
+    );
+    pb.set_draw_delta(100);
+
+    let start = Instant::now();
+    let buffer = (0..num_pixels)
         .into_par_iter()
+        .progress_with(pb)
         .flat_map(|i| {
             let x = i % w;
             let y = i / w;
@@ -98,8 +110,12 @@ fn main() {
             ]
         })
         .collect::<Vec<_>>();
+    let duration = start.elapsed();
+    println!("Rendering complete. (runtime: {}s)", duration.as_secs());
+
     image::save_buffer(&image, &buffer, w, h, image::RGB(8)).unwrap_or_else(|e| {
         eprintln!("Could not write image file to {}: {}", image.display(), e);
         std::process::exit(1)
     });
+    println!("Saved image.");
 }

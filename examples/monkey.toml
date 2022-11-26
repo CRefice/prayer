@@ -6,7 +6,7 @@ exposure = 1.0
 gamma = 2.2
 
 [scene]
-environment = "textures/sunset.hdr"
+environment = "examples/textures/sky.hdr"
 [[scene.objects]]
-geometry = "meshes/monkey.obj"
+geometry = "examples/meshes/monkey.obj"
 material = { albedo = [0.8, 0.2, 0.3], metalness = 0.0, roughness = 0.4 }
